@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const mongoose = require('mongoose');
+require('dotenv').config();
 const feedRoutes = require('./routes/feed');
 
 const app = express();
@@ -16,5 +17,9 @@ app.use((req, res, next) => {
 });
 
 app.use('/feed', feedRoutes);
-
-app.listen(8080);
+mongoose.connect(process.env.mongoURI)
+    .then(() => {
+        app.listen(8080);
+        console.log('Successfully connected to port 8080');
+    })
+    .catch(err => console.log(err));
