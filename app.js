@@ -18,7 +18,11 @@ const fileStorage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, callback) => {
-    file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg' ? callback(null, true) : callback(null, false);
+  if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+    callback(null, true);
+  } else {
+    callback(null, false);
+  }
 };
 
 // app.use(bodyParser.urlencoded()); // x-www-form-urlencoded <form>

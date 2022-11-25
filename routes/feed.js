@@ -26,6 +26,6 @@ router.put('/post/:postId',[
   check('content')
     .trim()
     .isLength({ min: 5 })
-]);
+], feedController.updatePost);
 
 module.exports = router;

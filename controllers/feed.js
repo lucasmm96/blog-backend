@@ -1,5 +1,7 @@
 const { validationResult } = require('express-validator');
 const Post = require('../models/post');
+const fs = require('fs');
+const path = require('path');
 
 exports.getPosts = (req, res, next) => {
   Post.find()
@@ -85,14 +87,6 @@ exports.updatePost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
   let imageUrl = req.body.imageUrl;
-  if (req.file) {
-    imageUrl = req.file.path;
-  }
-  if (!imageUrl) {
-    const error = new Error('No file picked');
-    error.statusCode = 422;
-    throw error;
-  }
   Post.findById(postId)
     .then(post => {
       if (!post) {
@@ -100,9 +94,13 @@ exports.updatePost = (req, res, next) => {
         error.statusCode = 404;
         throw error;
       }
+      
+      req.file ? imageUrl = req.file.path :  imageUrl = post.imageUrl;
+      if (imageUrl !== post.imageUrl) { clearImage(post.imageUrl); }
+      
       post.title = title;
-      post.content = content;
       post.imageUrl = imageUrl;
+      post.content = content;
       return post.save();
     })
     .then(result => {
@@ -115,3 +113,8 @@ exports.updatePost = (req, res, next) => {
       next(err);
     });    
 };
+
+const clearImage = filePath => {
+  filePath = path.join(__dirname, '..', filePath);
+  fs.unlink(filePath, err => console.log(err));
+}
