@@ -19,4 +19,13 @@ router.post('/post',[
 
 router.get('/post/:postId', feedController.getPost);
 
+router.put('/post/:postId',[
+  check('title')
+    .trim()
+    .isLength({ min: 5 }),
+  check('content')
+    .trim()
+    .isLength({ min: 5 })
+]);
+
 module.exports = router;
