@@ -23,7 +23,6 @@ exports.createPost = (req, res, next) => {
     const error = new Error('Validation failed');
     error.statusCode = 422
     throw error;
-    // return res.status(422).json({ message: 'Validation failed.', errors: errors.array() })
   }
   const title = req.body.title;
   const content = req.body.content;
