@@ -48,7 +48,7 @@ app.use((error, req, res, next) => {
    res.status(status).json({ message: message, data: data });
 });
 
-mongoose.connect(process.env.mongoURI)
+mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         app.listen(8080);
         console.log('Successfully connected to port 8080');

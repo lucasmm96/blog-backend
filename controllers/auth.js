@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const { validationResult } = require('express-validator');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const jToken = require('jsonwebtoken');
 
 exports.signup = (req, res, next) => {
   const errors = validationResult(req);  
@@ -34,4 +35,39 @@ exports.signup = (req, res, next) => {
       }
       next(err);
     });
+}
+
+exports.login = (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  let loadedUser;
+  
+  User.findOne({ email: email })
+    .then(user => {
+      if (!user) {
+        const error = new Error('Email could not be found');
+        error.statusCode = 401;
+        throw error;
+      }
+      loadedUser = user;
+      return bcrypt.compare(password, user.password);
+    })
+    .then(matched => {
+      if (!matched) {
+        const error = new Error('Wrong passoword');
+        error.statusCode = 401;
+        throw error;        
+      }
+      const token = jToken.sign({
+        email: loadedUser.email,
+        userId: loadedUser._id.toString()
+      }, process.env.LOGIN_TOKEN, { expiresIn: '1h' });
+      res.status(200).json({ token: token, userId: loadedUser._id.toString() });
+    })
+    .catch(err => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });    
 }
