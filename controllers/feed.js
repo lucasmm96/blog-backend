@@ -3,7 +3,6 @@ const Post = require('../models/post');
 const fs = require('fs');
 const path = require('path');
 const User = require('../models/user');
-const { log } = require('console');
 
 exports.getPosts = (req, res, next) => {
   const currentPage = req.query.page || 1;
