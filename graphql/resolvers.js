@@ -3,6 +3,8 @@ const User = require('../models/user');
 const Post = require('../models/post');
 const validator = require('validator');
 const jToken = require('jsonwebtoken');
+const { clearImage } = require('../util/file');
+const user = require('../models/user');
 require('dotenv').config();
 
 module.exports = {
@@ -67,7 +69,7 @@ module.exports = {
     if(validator.isEmpty(postInput.title) || !validator.isLength(postInput.title, { min:5 })) {
       errors.push({ message: 'Title is invalid' });
     }
-    if(validator.isEmpty(postInput.content) || !validator.isLength(postInput.content, { min:5 })) {
+    if(validator.isEmpty(postInput.content) || !validator.isLength(postInput.content, { min: 5 })) {
       errors.push({ message: 'Content is invalid' });
     }
     if (errors.length > 0) {
@@ -188,6 +190,31 @@ module.exports = {
       _id: updatedPost._id.toString(),
       createdAt: updatedPost.createdAt.toISOString(),
       updatedAt: updatedPost.updatedAt.toISOString()
+    };
+  },
+  
+  deletePost: async function({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error('Not authenticated!');
+      error.code = 401;
+      throw error;
     }
+    const post = await Post.findById(id);
+    if (!post) {
+      const error = new Error('No post found');
+      error.code = 404;
+      throw error;
+    }
+    if (post.creator.toString() !== req.userId.toString()) {
+      const error = new Error('Not authorized');
+      error.code = 403;
+      throw error;
+    }
+    clearImage(post.imageUrl);
+    await Post.findByIdAndRemove(id);
+    const user = await User.findById(req.userId);
+    user.posts.pull(id);
+    await user.save();
+    return true;
   }
 };
