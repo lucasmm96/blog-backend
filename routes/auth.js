@@ -29,4 +29,8 @@ router.put('/signup', [
 
 router.post('/login', authController.login);
 
+router.get('/status', isAuth, authController.getStatus);
+
+router.put('/status/update', isAuth, authController.updateStatus);
+
 module.exports = router;

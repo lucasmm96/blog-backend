@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const User = require('../models/user');
 const io = require('../socket');
-const { emit } = require('process');
 
 exports.getPosts = async (req, res, next) => {
   const currentPage = req.query.page || 1;
@@ -50,13 +49,14 @@ exports.createPost = async (req, res, next) => {
     await post.save();
     const user = await User.findById(req.userId);
     user.posts.push(post);
-    await user.save();
+    const savedUser = await user.save();
     io.getIO().emit('posts', { action: 'create', post: { ...post._doc, creator: { _id: req.userId, name: user.name } } });
     res.status(201).json({
       message: 'Post created successfully!',
       post: post,
       creator: { _id: user._id, name: user.name }
     });
+    return savedUser;
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -146,43 +146,6 @@ exports.deletePost = async (req, res, next) => {
     await user.save();
     io.getIO().emit('posts', { action: 'delete', post: postId });
     res.status(200).json({ message: 'Post deleted.' });
-  } catch (err) {
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  }
-};
-
-exports.getStatus = async (req, res) => {
-  try {
-    const user = await User.findById(req.userId);
-    if (!user) {
-      error = new Error('User not found');
-      error.statusCode = 401
-      throw error;
-    }
-    res.status(200).json({ message: 'User status fetched', status: user.status });
-  } catch (err) {
-    if (!err.statusCode) {
-      err.statusCode = 500;
-    }
-    next(err);
-  }
-};
-
-exports.updateStatus = async (req, res) => {
-  const status = req.body.status;
-  try {
-    const user = await User.findById(req.userId);
-    if (!user) {
-      error = new Error('User not found');
-      error.statusCode = 401
-      throw error;
-    }
-    user.status = status;
-    const result = await user.save();
-    res.status(200).json({ message: 'User status updated', status: result });
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
